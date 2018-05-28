@@ -19,7 +19,9 @@
 // DEALINGS IN THE SOFTWARE.
 #endregion
 
+using System;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Web.Http;
 using Dnn.AuthServices.Jwt.Components.Common.Controllers;
 using Dnn.AuthServices.Jwt.Components.Entity;
@@ -51,9 +53,9 @@ namespace Dnn.AuthServices.Jwt.Services
         /// DnnAuthorize attribute is present at a class level.</remarks>
         [HttpPost]
         [AllowAnonymous]
-        public IHttpActionResult Login(LoginData loginData)
+        public IHttpActionResult Login()
         {
-            var result = JwtController.Instance.LoginUser(Request, loginData);
+            var result = JwtController.Instance.LoginUser(Request);
             return ReplyWith(result);
         }
 

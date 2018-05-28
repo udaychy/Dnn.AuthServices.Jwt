@@ -28,6 +28,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web.UI.WebControls;
 using Dnn.AuthServices.Jwt.Auth;
 using Dnn.AuthServices.Jwt.Components.Entity;
 using Dnn.AuthServices.Jwt.Data;
@@ -114,9 +115,9 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         }
 
         /// <summary>
-        /// Validates user login credentials and returns result when successful
+        /// Validates user login credentials from request header Auth parameter and returns result when successful
         /// </summary>
-        public LoginResultData LoginUser(HttpRequestMessage request, LoginData loginData)
+        public LoginResultData LoginUser(HttpRequestMessage request)
         {
             if (!JwtAuthMessageHandler.IsEnabled)
             {
@@ -133,8 +134,16 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
 
             var status = UserLoginStatus.LOGIN_FAILURE;
             var ipAddress = request.GetIPAddress() ?? "";
+
+            var loginData = GetLoginCredentialFromHeader(request);
+            if (loginData == null)
+            {
+                Logger.Trace("empty username or password");
+                return EmptyWithError("bad-credentials");
+            }
+
             var userInfo = UserController.ValidateUser(portalSettings.PortalId,
-                loginData.Username, loginData.Password, "DNN", "", AuthScheme, ipAddress, ref status);
+                loginData.Value.Username, loginData.Value.Password, "DNN", "", AuthScheme, ipAddress, ref status);
 
             if (userInfo == null)
             {
@@ -484,6 +493,25 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         private static string GetHashedStr(string data)
         {
             return EncodeBase64(Hasher.ComputeHash(TextEncoder.GetBytes(data)));
+        }
+
+        
+        /// <summary>
+        /// Extract and return login credential from the Request Auth header and if available otherwise null
+        /// </summary>
+        private static LoginData? GetLoginCredentialFromHeader(HttpRequestMessage request)
+        { 
+            var decodedAuthParameter = Encoding.UTF8.GetString(Convert.FromBase64String(
+                request?.Headers.Authorization.Parameter ?? String.Empty));
+            var credentials = decodedAuthParameter.Split(new[] { ':' });
+
+            return credentials.Length < 2
+                ? (LoginData?) null
+                : new LoginData
+                {
+                    Username = credentials[0],
+                    Password = credentials[1]
+                };
         }
 
         #endregion

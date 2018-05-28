@@ -29,7 +29,7 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         string SchemeType { get; }
         string ValidateToken(HttpRequestMessage request);
         bool LogoutUser(HttpRequestMessage request);
-        LoginResultData LoginUser(HttpRequestMessage request, LoginData loginData);
+        LoginResultData LoginUser(HttpRequestMessage request);
         LoginResultData RenewToken(HttpRequestMessage request, string renewalToken);
     }
 }
