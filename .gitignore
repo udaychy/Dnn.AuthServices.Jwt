@@ -1,0 +1,6 @@
+
+__Library.build
+bin
+obj
+packages
+*.suo
