@@ -20,7 +20,9 @@
 #endregion
 
 using System;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading;
 using Dnn.AuthServices.Jwt.Components.Common.Controllers;
@@ -79,11 +81,11 @@ namespace Dnn.AuthServices.Jwt.Auth
         {
             try
             {
-                var username = _jwtController.ValidateToken(request);
-                if (!string.IsNullOrEmpty(username))
+                var user = _jwtController.ValidateToken(request);
+                if (user != null)
                 {
-                    if (Logger.IsTraceEnabled) Logger.Trace($"Authenticated user '{username}'");
-                    SetCurrentPrincipal(new GenericPrincipal(new GenericIdentity(username, AuthScheme), null), request);
+                    if (Logger.IsTraceEnabled) Logger.Trace($"Authenticated user '{user.Username}'");
+                    SetCurrentPrincipal(new GenericPrincipal(new GenericIdentity(user.Username, AuthScheme), user.Roles), request);
                 }
             }
             catch (Exception ex)
@@ -93,5 +95,6 @@ namespace Dnn.AuthServices.Jwt.Auth
         }
 
         #endregion
+
     }
 }

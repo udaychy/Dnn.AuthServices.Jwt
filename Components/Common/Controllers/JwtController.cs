@@ -58,6 +58,9 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         public const string AuthScheme = "Bearer";
         public string SchemeType => "JWT";
 
+        public const string BasicAuthScheme = "Basic";
+        private readonly static Encoding CredentialEncoder = Encoding.GetEncoding("iso-8859-1");
+
         #endregion
 
         #region constructors / instantiators
@@ -76,7 +79,7 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         /// <summary>
         /// Validates the received JWT against the databas eand returns username when successful.
         /// </summary>
-        public string ValidateToken(HttpRequestMessage request)
+        public UserInfo ValidateToken(HttpRequestMessage request)
         {
             if (!JwtAuthMessageHandler.IsEnabled)
             {
@@ -135,7 +138,7 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
             var status = UserLoginStatus.LOGIN_FAILURE;
             var ipAddress = request.GetIPAddress() ?? "";
 
-            var loginData = GetLoginCredentialFromHeader(request);
+            var loginData = GetCredentials(request);
             if (loginData == null)
             {
                 Logger.Trace("empty username or password");
@@ -336,7 +339,7 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
             return authorization;
         }
 
-        private string ValidateAuthorizationValue(string authorization)
+        private UserInfo ValidateAuthorizationValue(string authorization)
         {
             var parts = authorization.Split('.');
             if (parts.Length < 3)
@@ -361,7 +364,7 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
                 return null;
 
             var userInfo = TryGetUser(jwt, true);
-            return userInfo?.Username;
+            return userInfo;
         }
 
         private bool IsValidSchemeType(JwtHeader header)
@@ -495,22 +498,32 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
             return EncodeBase64(Hasher.ComputeHash(TextEncoder.GetBytes(data)));
         }
 
-        
         /// <summary>
-        /// Extract and return login credential from the Request Auth header and if available otherwise null
+        /// Extract and return login credential from the Request Auth header, if available otherwise null
         /// </summary>
-        private static LoginData? GetLoginCredentialFromHeader(HttpRequestMessage request)
-        { 
-            var decodedAuthParameter = Encoding.UTF8.GetString(Convert.FromBase64String(
-                request?.Headers.Authorization.Parameter ?? String.Empty));
-            var credentials = decodedAuthParameter.Split(new[] { ':' });
+        private static LoginData? GetCredentials(HttpRequestMessage request)
+        {
+            if (request?.Headers.Authorization == null ||
+            request.Headers.Authorization.Scheme.ToLower() != BasicAuthScheme.ToLower())
+            {
+                return null;
+            }
 
-            return credentials.Length < 2
+            string authorization = request.Headers.Authorization.Parameter;
+            if (String.IsNullOrEmpty(authorization))
+            {
+                return null;
+            }
+
+            string decoded = CredentialEncoder.GetString(Convert.FromBase64String(authorization));
+            string[] parts = decoded.Split(new[] {':'}, 2);
+
+            return (parts.Length < 2)
                 ? (LoginData?) null
                 : new LoginData
                 {
-                    Username = credentials[0],
-                    Password = credentials[1]
+                    Username = parts[0],
+                    Password = parts[1]
                 };
         }
 
