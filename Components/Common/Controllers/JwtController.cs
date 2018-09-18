@@ -506,7 +506,8 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         {
             var auth = request?.Headers?.Authorization;
 
-            if(auth.Scheme?.ToLower() != BasicAuthScheme.ToLower()
+            if( auth == null
+                || auth.Scheme?.ToLower() != BasicAuthScheme.ToLower()
                 || auth.Parameter == null)
             {
                 return null;
