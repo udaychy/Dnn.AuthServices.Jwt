@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IdentityModel.Tokens;
 using System.Linq;
 using System.Net.Http;
@@ -503,28 +504,32 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
         /// </summary>
         private static LoginData? GetCredentials(HttpRequestMessage request)
         {
-            if (request?.Headers.Authorization == null ||
-            request.Headers.Authorization.Scheme.ToLower() != BasicAuthScheme.ToLower())
+            var auth = request?.Headers?.Authorization;
+
+            if(auth.Scheme?.ToLower() != BasicAuthScheme.ToLower()
+                || auth.Parameter == null)
             {
                 return null;
             }
-
-            string authorization = request.Headers.Authorization.Parameter;
-            if (String.IsNullOrEmpty(authorization))
+            
+            try
             {
-                return null;
-            }
+                string decoded = CredentialEncoder.GetString(Convert.FromBase64String(auth.Parameter));
+                string[] parts = decoded.Split(new[] {':'}, 2);
 
-            string decoded = CredentialEncoder.GetString(Convert.FromBase64String(authorization));
-            string[] parts = decoded.Split(new[] {':'}, 2);
-
-            return (parts.Length < 2)
+                return (parts.Length < 2)
                 ? (LoginData?) null
                 : new LoginData
                 {
                     Username = parts[0],
                     Password = parts[1]
                 };
+            
+            }
+            catch (Exception)
+            {
+                return null;
+            }            
         }
 
         #endregion
