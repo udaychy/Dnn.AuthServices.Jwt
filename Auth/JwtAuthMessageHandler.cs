@@ -85,7 +85,7 @@ namespace Dnn.AuthServices.Jwt.Auth
                 if (user != null)
                 {
                     if (Logger.IsTraceEnabled) Logger.Trace($"Authenticated user '{user.Username}'");
-                    SetCurrentPrincipal(new GenericPrincipal(new GenericIdentity(user.Username, AuthScheme), user.Roles), request);
+                    SetCurrentPrincipal(new GenericPrincipal(new GenericIdentity(user.Username, AuthScheme), null), request);
                 }
             }
             catch (Exception ex)
