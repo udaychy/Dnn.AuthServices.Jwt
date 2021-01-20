@@ -1,5 +1,5 @@
 # Dnn.AuthServices.Jwt
-This repository is build on the [default DNN JWT Auth service (https://github.com/dnnsoftware/Dnn.Platform/tree/development/DNN%20Platform/Dnn.AuthServices.Jwt).
+This repository is build on the [default DNN JWT Auth service (https://github.com/dnnsoftware/Dnn.Platform/tree/develop/DNN%20Platform/Dnn.AuthServices.Jwt).
 The only thing that is changed here is the way login credentials is passed to the `JwtAuth/API/mobile/login` endpoint.
 
 Instead of passing the plain login credentials in the request body(used by DNN JWT Auth service), Basic Authentication technique is used here to pass the encoded login credentials in the request header.
